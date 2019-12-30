@@ -10,7 +10,6 @@ from combobox import AutocompleteCombobox
 from pathlib import Path
 import subprocess
 from collections import OrderedDict
-from itertools import chain
 import os
 
 
@@ -24,7 +23,7 @@ bg_color = 'white'
 
 
 APPLICATION_PATH = ''
-
+IMAGE_PATH = Path('img')
 
 def is_number(s):
     try:
@@ -41,7 +40,6 @@ def __main__():
     configuration = Configuration()
     Gui(root, configuration)
     root.mainloop()
-    pass
 
 
 class Gui():
@@ -60,8 +58,6 @@ class UpperFrame(object):
         self.configuration = configuration
         self.root = root
 
-        pass
-
 
 class StaticUpperMenu(UpperFrame):
     def __init__(self, root, configuration, gui):
@@ -73,7 +69,7 @@ class StaticUpperMenu(UpperFrame):
         pady = 1
         btn_bdw = 3
 
-        image_path = os.path.join(APPLICATION_PATH, "plus_small.png")
+        image_path = IMAGE_PATH / "plus_small.png"
         image = Image.open(image_path)
         self.photo = ImageTk.PhotoImage(image)
 
@@ -94,7 +90,7 @@ class StaticUpperMenu(UpperFrame):
                                  fg=font_color, compound='left', image=self.photo)
         new_project_btn.grid(row=0, column=1, padx=2, pady=pady, sticky=W)
 
-        image_path = os.path.join(APPLICATION_PATH, "settings_small.png")
+        image_path = IMAGE_PATH / "settings_small.png"
         image = Image.open(image_path)
         self.settings_icon = ImageTk.PhotoImage(image)
         settings_btn = Button(self.frame,
@@ -107,7 +103,7 @@ class StaticUpperMenu(UpperFrame):
 
         settings_btn.grid(row=0, column=2, sticky=W, padx=2, pady=pady)
 
-        image_path = os.path.join(APPLICATION_PATH, "folder_small.png")
+        image_path = IMAGE_PATH / "folder_small.png"
         image = Image.open(image_path)
         self.folder_icon = ImageTk.PhotoImage(image)
         folder_btn = Button(self.frame,
@@ -140,17 +136,14 @@ class StaticUpperMenu(UpperFrame):
                                     ' Bitte setzen Sie den entsprechenden Ordner unter Einstellungen.'))
             return
         subprocess.call(['open', '-R', self.configuration.dict['superfolder']])
-        pass
 
     def new_customer(self):
         self.gui.action_frame.frame.destroy()
         self.gui.action_frame = NewCustomer(self.root, self.configuration, self.gui)
-        pass
 
     def new_project(self):
         self.gui.action_frame.frame.destroy()
         self.gui.action_frame = NewProject(self.root, self.configuration, self.gui)
-        pass
 
 
 class ActionFrame(object):
@@ -165,7 +158,6 @@ class ActionFrame(object):
             self.frame.grid(row=2, column=0, pady=5, padx=15)
         self.configuration = configuration
         self.root = root
-        pass
 
     def customers_ordered(self):
         customers_dict = OrderedDict(sorted(self.configuration.database.dict['customers'].items()))
