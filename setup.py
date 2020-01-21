@@ -6,12 +6,14 @@ Usage:
 """
 
 from setuptools import setup
-
+import os
 APP = ["gui.py"]
 APP_NAME = "ProMan"
-
-DATA_FILES = ['img/folder_small.png', 'img/settings_small.png', 'img/plus_small.png', 'img/sympathie_logo.ppm',
-              'combobox.py', 'customer_project.py', 'copy_folders.py', 'configure.py', 'util.py']
+IMAGE_FILES = [os.path.abspath('img/folder_small.png'),
+              os.path.abspath('img/settings_small.png'),
+              os.path.abspath('img/plus_small.png'),
+              os.path.abspath('img/sympathie_logo.ppm')]
+DATA_FILES = ['combobox.py', 'customer_project.py', 'copy_folders.py', 'configure.py', 'util.py']
 
 OPTIONS = {'iconfile': 'img/butterfly.icns',
            'plist': {
@@ -20,7 +22,8 @@ OPTIONS = {'iconfile': 'img/butterfly.icns',
                'NSHumanReadableCopyright': u"Copyright © 2016, Lovis Anderson, All Rights Reserved",
            },
            'argv_emulation': True,
-           'packages': ['PIL']}
+           'packages': ['PIL'],
+           'resources': [('img', IMAGE_FILES), ]}
 
 setup(
     app=APP,
