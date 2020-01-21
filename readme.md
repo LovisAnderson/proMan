@@ -2,7 +2,7 @@
 ## Setting up a development environment
 
 - open folder in terminal
-- create virtualenvironment `virtualenv venv`
+- create virtualenvironment `virtualenv venv --python=python3`
 - activate environment `source venv/bin/activate`
 - install requirements `pip install -r requirements.txt`
 
