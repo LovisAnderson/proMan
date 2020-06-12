@@ -14,11 +14,16 @@ class Customer:
             rel_folder = customer_folder
         self.dict = {'name': name,
                      'index': nr2str(customer_index),
-                     'rel_folder': rel_folder ,
+                     'rel_folder': rel_folder,
                      'projects': {},
                      'project_index': 0,
                      'subfolder': subfolder is not None
                      }
+
+    def __getitem__(self, item):
+        assert item in self.dict.keys()
+        return self.dict[item]
+
 
 class Project:
 
@@ -35,3 +40,7 @@ class Project:
                      'customer_index': customer_index,
                      'folder': str(superfolder / customer_folder / project_folder_name)
                      }
+
+    def __getitem__(self, item):
+        assert item in self.dict.keys()
+        return self.dict[item]

@@ -3,7 +3,7 @@
 
 from tkinter import *
 from tkinter import filedialog, messagebox
-from configure import Configuration
+from configure import Configuration, CustomerActiveInactiveException
 from PIL import Image, ImageTk
 from copy_folders import copy_directory, create_empty_dir
 from combobox import AutocompleteCombobox
@@ -11,7 +11,7 @@ from pathlib import Path
 import subprocess
 from collections import OrderedDict
 import os
-
+from util import is_packaged
 
 btn_h = 3
 btn_w = 20
@@ -22,8 +22,8 @@ btn_bg_color = '#e6e6e6'
 bg_color = 'white'
 
 
-APPLICATION_PATH = ''
 IMAGE_PATH = Path('img')
+
 
 def is_number(s):
     try:
@@ -32,12 +32,15 @@ def is_number(s):
     except ValueError:
         return False
 
-def __main__():
 
+def __main__():
+    debug = not is_packaged()
+    title = "Datei Management System (DEBUG)" if debug else "Datei Management System"
     root = Tk()
-    root.wm_title("Datei Management System")
+    root.wm_title(title)
     root.config(background=bg_color)  # sets background color to white
-    configuration = Configuration()
+
+    configuration = Configuration(debug=debug)
     Gui(root, configuration)
     root.mainloop()
 
@@ -215,85 +218,38 @@ class Settings(ActionFrame):
 
     def actualize_db(self):
         self.configuration.database.reset_database()
-        self.import_database_structure(self.configuration.dict['superfolder'])
+        try:
+            self.configuration.create_database_from_path(self.configuration.dict['superfolder'])
+        except CustomerActiveInactiveException as exception:
+            messagebox.showerror('Kunde doppelt!', exception)
+
 
     def set_db(self):
         directory = filedialog.askdirectory()
         if directory:
-            try:
-                self.configuration.change_database_location(directory)
-            except:
-                messagebox.showerror("Open Source File", "Failed to read directory \n'%s'" % directory)
+            self.configuration.change_database_location(directory)
 
     def set_subfolder(self):
         directory = filedialog.askdirectory()
         if directory:
-            directory = Path(directory)
-            if not directory.is_dir():
-                messagebox.showerror("Not a directory", "'%s'" % directory)
-                return
             directory = Path(directory).name
-            try:
-                self.configuration.set_subfolder(directory)
-            except:
-                messagebox.showerror("Open Source File", "Failed to read directory \n'%s'" % directory)
+            self.configuration.set_subfolder(directory)
 
     def set_folder(self):
-        dir_opt = options = {}
         directory = filedialog.askdirectory()
         if directory:
             self.configuration.set_superfolder(directory)
             self.configuration.change_database_location(directory)
-            # self.import_database_structure(directory)
 
     def set_import_folder(self):
-        dir_opt = options = {}
         directory = filedialog.askdirectory()
         if directory:
-            try:
-                self.configuration.set_import_folder(directory)
-            except:
-                messagebox.showerror("Open Source File", "Failed to read directory \n'%s'" % directory)
+            self.configuration.set_import_folder(directory)
 
     def choose_import_directory(self):
-        dir_opt = options = {}
         directory = filedialog.askdirectory()
         if directory:
-            try:
-                self.import_database_structure(directory)
-            except:
-                messagebox.showerror("Open Source File", "Failed to read directory \n'%s'" % directory)
-
-    def import_database_structure(self, startpath):
-        startpath = Path(startpath)
-        subfolder_full_path = startpath / self.configuration.dict["extra_subfolder"]
-
-        for i, dir_to_iter in enumerate([subfolder_full_path, startpath]):
-            for dir in dir_to_iter.iterdir():
-                if not dir.is_dir():
-                    continue
-                in_subfolder = i == 0
-
-                customer_index = dir.name[:3]
-                customer_name = dir.name[4:]
-
-                if customer_index.isdigit():
-                    self.configuration.database.new_customer_from_path(int(customer_index),
-                                                                       customer_name,
-                                                                       in_subfolder=in_subfolder)
-                    # print('Kundenname: {}'.format(customer_name))
-                    # print('Kundenindex: {}'.format(customer_index))
-                    for subdir in dir.iterdir():
-                        if not subdir.is_dir():
-                            continue
-                        project_index = subdir.name[4:7]
-                        project_name = subdir.name[8:]
-                        if project_index.isdigit() and subdir.name[:3] == self.configuration.database.dict['customers'][customer_name]['index']:
-                            self.configuration.database.new_project_from_path(customer_name,
-                                                                              int(project_index),
-                                                                              project_name,
-                                                                              )
-        print("number customers: ", len(self.configuration.database.dict["customers"]))
+            self.configuration.create_database_from_path(directory)
 
 
 class NewCustomer(ActionFrame):
@@ -415,17 +371,18 @@ class NewProject(ActionFrame):
         if self.wrong_input():
             return
 
-        customer_found = self.configuration.database.customer_activity_change(self.customer_name)
-        if not customer_found:
-            messagebox.showerror('Kundenordner nicht gefunden!')
+        reactivated = self.configuration.database.reactivate_customer(self.customer_name)
+        if reactivated:
+            subfolder = self.configuration.dict['extra_subfolder']
+            messagebox.showinfo('Kunde reaktiviert!',
+                                f'Für den Kunden existiert ein Ordner in {subfolder}.'
+                                f' Bitte führe den Ordner mit dem Hauptkundenordner zusammen!')
         project = self.configuration.database.new_project(self.customer_name, self.project_name)
 
-
-
         if self.project_folder_empty.get() == 1:
-            create_empty_dir(project.dict['folder'])
+            create_empty_dir(project['folder'])
         else:
-            copy_directory(self.project_folder_src_dir, project.dict['folder'])
+            copy_directory(self.project_folder_src_dir, project['folder'])
 
         self.gui.action_frame.frame.destroy()
         self.gui.action_frame = ProjectCreated(self.root, self.configuration, self.gui, self.customer_name, self.project_name)
