@@ -13,8 +13,6 @@ from collections import OrderedDict
 import os
 from util import is_packaged
 
-btn_h = 3
-btn_w = 20
 gui_width = 750
 gui_height = 400
 font_color = '#4d1300'
@@ -68,7 +66,7 @@ class StaticUpperMenu(UpperFrame):
         super(StaticUpperMenu, self).__init__(root, configuration, gui)
 
         btn_h = 45
-        btn_w = 60
+        btn_w = 68
         pady = 1
         btn_bdw = 3
 
@@ -258,7 +256,7 @@ class NewCustomer(ActionFrame):
         self.name = 'new customer'
         super(NewCustomer, self).__init__(root, configuration, gui)
 
-        new_customer_lbl = Label(self.frame, fg=font_color,
+        new_customer_lbl = Label(self.frame, fg=font_color, bg=bg_color,
                                  text='Kundenname:')
         new_customer_lbl.grid(row=0, column=0, padx=2, pady=10, sticky=W)
         self.e = Entry(self.frame)
