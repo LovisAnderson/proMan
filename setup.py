@@ -7,6 +7,8 @@ Usage:
 
 from setuptools import setup
 import os
+
+
 APP = ["gui.py"]
 APP_NAME = "ProMan"
 IMAGE_FILES = [os.path.abspath('img/folder_small.png'),
@@ -19,7 +21,7 @@ OPTIONS = {'iconfile': 'img/butterfly.icns',
            'plist': {
                'CFBundleName': APP_NAME,
                'CFBundleDisplayName': APP_NAME,
-               'NSHumanReadableCopyright': u"Copyright © 2016, Lovis Anderson, All Rights Reserved",
+               'NSHumanReadableCopyright': u"Copyright 2016, Lovis Anderson, All Rights Reserved",
            },
            'argv_emulation': True,
            'packages': ['PIL'],

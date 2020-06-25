@@ -1,4 +1,7 @@
-/venv/
-/build/
-/.eggs/
-/.idea/
+venv/
+build/
+.eggs/
+.idea/
+__pycache__/
+promanCFG_debug.json
+*/.database_debug.json
