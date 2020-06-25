@@ -11,3 +11,9 @@ def is_packaged():
         return False
     else:
         return True
+
+
+def change_footage_folder_name(folder, project_id):
+    footage_folder = Path(folder) / "Footage"
+    new_folder = Path(folder) / f"{project_id} MEDIEN"
+    footage_folder.rename(new_folder.absolute())

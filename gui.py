@@ -11,7 +11,7 @@ from pathlib import Path
 import subprocess
 from collections import OrderedDict
 import os
-from util import is_packaged
+from util import is_packaged, change_footage_folder_name
 
 btn_h = 3
 btn_w = 20
@@ -376,26 +376,20 @@ class NewProject(ActionFrame):
             subfolder = self.configuration.dict['extra_subfolder']
             messagebox.showinfo('Kunde reaktiviert!',
                                 f'Für den Kunden existiert ein Ordner in {subfolder}.'
-                                f' Bitte führe den Ordner mit dem Hauptkundenordner zusammen!')
+                                f' Bitte führe zuerst den Ordner mit dem Hauptkundenordner zusammen!')
+            return
         project = self.configuration.database.new_project(self.customer_name, self.project_name)
 
         if self.project_folder_empty.get() == 1:
             create_empty_dir(project['folder'])
         else:
             copy_directory(self.project_folder_src_dir, project['folder'])
-            self.change_name(project.dict['folder'])
+            change_footage_folder_name(project.dict['folder'], project_id=project['index'])
 
         self.gui.action_frame.frame.destroy()
         self.gui.action_frame = ProjectCreated(self.root, self.configuration, self.gui, self.customer_name, self.project_name)
 
-    def change_name(self, myfolder):
-        footage_folder = Path(myfolder + "/Footage")
-        newfoldername = myfolder + '/' + "???_??? " + ' MEDIEN'
-        for subfolder in Path(myfolder).iterdir():
-            if subfolder.is_dir():
-                if subfolder.resolve() == footage_folder.resolve():
-                    footage_folder.rename(newfoldername)
-                    print(myfolder.name)
+
 
     def wrong_input(self):
 
