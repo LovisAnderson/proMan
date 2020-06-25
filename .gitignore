@@ -5,3 +5,4 @@ build/
 __pycache__/
 promanCFG_debug.json
 */.database_debug.json
+dist/
