@@ -82,29 +82,35 @@ class Database():
         self.new_database()
         self.save()
 
-    def reactivate_customer(self, customer_name):
-        """
-        Method checks if customer has a folder in subfolder. If yes it returns True and False otherwise
-        Otherwise it looks if customer has a folder in subfolder
-        """
+    def customer_in_both_folders(self, customer_name):
         customer = self.dict['customers'][customer_name]
-
-        customer_folder_name = nr2str(customer['index']) + ' ' + customer['name']
-
-        if self.dict['customers'][customer_name]['subfolder']:
-
-            self.dict['customers'][customer_name]['subfolder'] = False
-            self.dict['customers'][customer_name]['rel_folder'] = customer_folder_name
-            self.save()
-            if (Path(self.superfolder) / f'{self.subfolder}/{customer_folder_name}').exists():
-                # If the folder does not exist it has been moved by hand and the corresponding entry in database has
-                # not yet been updated
-                return True
+        customer_index = nr2str(customer['index'])
+        match_folders_subfolder = list(Path(self.subfolder).glob(f'{customer_index}*{customer_name}*'))
+        match_folders_superfolder = list(Path(self.superfolder).glob(f'{customer_index}*{customer_name}*'))
+        if len(match_folders_subfolder) > 0 and len(match_folders_superfolder) > 0:
+            return True, match_folders_subfolder, match_folders_superfolder
         else:
-            folder = Path(self.superfolder) / f'{self.subfolder}/{customer_folder_name}'
-            if folder.exists():
-                return True
-        return False
+            return False, match_folders_subfolder, match_folders_superfolder
+
+    def track_subfolder_superfolder_status(self, customer_name):
+        customer = self.dict['customers'][customer_name]
+        customer_index = nr2str(customer['index'])
+        match_folders_subfolder = list((Path(self.superfolder) / self.subfolder).glob(f'*{customer_index}*{customer_name}*'))
+        match_folders_superfolder = list(Path(self.superfolder).glob(f'*{customer_index}*{customer_name}*'))
+        if ((len(match_folders_subfolder) > 0 and len(match_folders_superfolder) > 0) or
+            len(match_folders_subfolder) > 1 or len(match_folders_superfolder) > 1):
+            raise CustomerDuplication(
+                f"""
+                Für den Kunden {customer_name} mit dem index {customer_index} existieren mehrere Ordner. 
+                Bitte führe die Ordner {match_folders_subfolder} und {match_folders_superfolder} zuerst zusammen.
+                """
+            )
+        if customer['subfolder'] and len(match_folders_superfolder) == 1:
+            customer['subfolder'] = False
+            customer['rel_folder'] = match_folders_superfolder[0].name
+        elif not customer['subfolder'] and len(match_folders_subfolder) == 1:
+            customer['subfolder'] = True
+            customer['rel_folder'] = self.subfolder + '/' + match_folders_subfolder[0].name
 
 
 class Configuration:
@@ -202,10 +208,14 @@ class Configuration:
                     else:
                         in_db_index = customer_in_database['index']
                         if customer_index != in_db_index:
-                            raise CustomerActiveInactiveException(
+                            raise CustomerDuplication(
                                 f'Der Kunde {customer_name} wurde mehrmals gefunden mit verschiedenen Indices:'
                                 f' {customer_index} und {in_db_index}')
-
+                        else:
+                            raise CustomerDuplication(
+                                f"""
+                                Der Kunde {customer_name} wurde mehrmals gefunden! Bitte führe zuerst die Ordner zusammen
+                                """)
                         self.database.dict['customers'][customer_name]['subfolder'] = in_subfolder
                     for subdir in dir.iterdir():
                         if not subdir.is_dir() or len(subdir.name) < 9:
@@ -220,5 +230,5 @@ class Configuration:
         print("number customers: ", len(self.database.dict["customers"]))
 
 
-class CustomerActiveInactiveException(Exception):
+class CustomerDuplication(Exception):
     pass

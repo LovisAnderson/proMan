@@ -3,7 +3,7 @@
 
 from tkinter import *
 from tkinter import filedialog, messagebox
-from configure import Configuration, CustomerActiveInactiveException
+from configure import Configuration, CustomerDuplication
 from PIL import Image, ImageTk
 from copy_folders import copy_directory, create_empty_dir
 from combobox import AutocompleteCombobox
@@ -220,7 +220,7 @@ class Settings(ActionFrame):
         self.configuration.database.reset_database()
         try:
             self.configuration.create_database_from_path(self.configuration.dict['superfolder'])
-        except CustomerActiveInactiveException as exception:
+        except CustomerDuplication as exception:
             messagebox.showerror('Kunde doppelt!', exception)
 
 
@@ -370,13 +370,11 @@ class NewProject(ActionFrame):
 
         if self.wrong_input():
             return
-
-        reactivated = self.configuration.database.reactivate_customer(self.customer_name)
-        if reactivated:
-            subfolder = self.configuration.dict['extra_subfolder']
-            messagebox.showinfo('Kunde reaktiviert!',
-                                f'Für den Kunden existiert ein Ordner in {subfolder}.'
-                                f' Bitte führe den Ordner mit dem Hauptkundenordner zusammen!')
+        try:
+            self.configuration.database.track_subfolder_superfolder_status(self.customer_name)
+        except CustomerDuplication as exception:
+            messagebox.showerror("Kunde doppelt", exception)
+            return
         project = self.configuration.database.new_project(self.customer_name, self.project_name)
 
         if self.project_folder_empty.get() == 1:
@@ -386,7 +384,6 @@ class NewProject(ActionFrame):
 
         self.gui.action_frame.frame.destroy()
         self.gui.action_frame = ProjectCreated(self.root, self.configuration, self.gui, self.customer_name, self.project_name)
-
 
     def wrong_input(self):
 
